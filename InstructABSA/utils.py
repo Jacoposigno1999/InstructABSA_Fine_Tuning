@@ -14,7 +14,7 @@ class T5Generator:
     def __init__(self, model_checkpoint):
         self.tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
-        self.data_collator = DataCollatorForSeq2Seq(self.tokenizer)
+        self.data_collator = DataCollatorForSeq2Seq(self.tokenizer)#Data collators are objects that will form a batch by using a list of dataset elements as input.
         self.device = 'cuda' if torch.has_cuda else ('mps' if torch.has_mps else 'cpu')
 
     def tokenize_function_inputs(self, sample):

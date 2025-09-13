@@ -76,32 +76,6 @@ class DatasetLoader:
         df = df.drop(['len', 'record_idx'], axis=1).reset_index(drop = True)
         return df
 
-    def create_data_in_ate_format(self, df, key, text_col, aspect_col, bos_instruction = '', 
-                    eos_instruction = ''):
-        """
-        Prepare the data in the input format required.
-        """
-        if df is None:
-            return
-        try:
-            df.iloc[0][aspect_col][0][key]
-        except:
-            df = self.reconstruct_strings(df, aspect_col)
-        df['labels'] = df[aspect_col].apply(lambda x: ', '.join([i[key] for i in x]))
-        df['text'] = df[text_col].apply(lambda x: bos_instruction + x + eos_instruction)
-        return df
-
-    def create_data_in_atsc_format(self, df, on, key, text_col, aspect_col, bos_instruction = '', 
-                    delim_instruction = '', eos_instruction = ''):
-        """
-        Prepare the data in the input format required.
-        """
-        if df is None:
-            return
-        df = self.extract_rowwise_aspect_polarity(df, on=on, key=key, min_val=1)
-        df['text'] = df[[text_col, aspect_col]].apply(lambda x: bos_instruction + x[0] + delim_instruction + x[1] + eos_instruction, axis=1)
-        df = df.rename(columns = {'polarity': 'labels'})
-        return df
 
     def create_data_in_aspe_format(self, df, key, label_key, text_col, aspect_col, bos_instruction = '', 
                                          eos_instruction = ''):
@@ -113,42 +87,13 @@ class DatasetLoader:
         try:
             df.iloc[0][aspect_col][0][key]
         except:
+            print("String recostruction...")
             df = self.reconstruct_strings(df, aspect_col)
         df['labels'] = df[aspect_col].apply(lambda x: ', '.join([f"{i[key]}:{i[label_key]}" for i in x]))
         df['text'] = df[text_col].apply(lambda x: bos_instruction + x + eos_instruction)
         return df
     
-    def create_data_in_aooe_format(self, df, aspect_col, opinion_col, key, text_col, 
-                               bos_instruction = '', delim_instruction = '', eos_instruction = ''):
-        """
-        Prepare the data in the input format required.
-        """
-        if df is None:
-            return
-        df = self.extract_rowwise_aspect_opinions(df, aspect_col=aspect_col, opinion_col=opinion_col, key=key, min_val=1)
-        df['text'] = df[[text_col, 'aspect']].apply(lambda x: bos_instruction + x[0] + delim_instruction + x[1] + eos_instruction, axis=1)
-        df = df.rename(columns = {'opinion_term': 'labels'})
-        return df
-    
-    def create_data_in_aope_format(self, df, key, text_col, aspect_col, opinion_col,
-                                         bos_instruction = '', eos_instruction = ''):
-        """
-        Prepare the data in the input format required.
-        """
-        df['labels'] = df[[aspect_col, opinion_col]].apply(lambda x: ', '.join([f"{' '.join(i[key])}:{' '.join(j[key])}" for i, j in zip(x[0], x[1])]), axis=1)
-        df['text'] = df[text_col].apply(lambda x: bos_instruction + x + eos_instruction)
-        return df
-    
-    def create_data_in_aoste_format(self, df, key, label_key, text_col, aspect_col, opinion_col,
-                                         bos_instruction = '', eos_instruction = ''):
-        """
-        Prepare the data in the input format required.
-        """
-        label_map = {'POS':'positive', 'NEG':'negative', 'NEU':'neutral'}
-        df['labels'] = df[[aspect_col, opinion_col]].apply(lambda x: ', '.join([f"{' '.join(i[key])}:{' '.join(j[key])}:{label_map[i[label_key]]}" for i, j in zip(x[0], x[1])]), axis=1)
-        df['text'] = df[text_col].apply(lambda x: bos_instruction + x + eos_instruction)
-        return df
-    
+   
     def set_data_for_training_semeval(self, tokenize_function):
         """
         Create the training and test dataset as huggingface datasets format.
